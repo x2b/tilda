@@ -13,6 +13,7 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#define _POSIX_C_SOURCE 200112L
 #define _POSIX_SOURCE /* feature test macro for signal functions */
 #define _XOPEN_SOURCE /* feature test macro for popen */
 
@@ -52,7 +53,7 @@
 
 #include <vte/vte.h>
 #include <glib/gstdio.h>
-
+#include <stdlib.h>
 
 static gchar *create_lock_file (struct lock_info lock)
 {
@@ -612,6 +613,8 @@ int main (int argc, char *argv[])
     gtk_init (&argc, &argv);
 
     load_custom_css_file ();
+
+    setenv ("COLORTERM", "tilda", FALSE);
 
     /* create new tilda_window */
     gboolean success = tilda_window_init (config_file, lock.instance, &tw);
