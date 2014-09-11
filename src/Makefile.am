@@ -2,19 +2,17 @@
 
 # Define a C macro LOCALEDIR indicating where catalogs 
 # will be installed.
-DEFS += -DLOCALEDIR=\"$(localedir)\" -DDATADIR=\"$(datadir)\" -DPKGDATADIR=\"$(pkgdatadir)\"
 
-bin_PROGRAMS += src/tilda
+bin_PROGRAMS += %reldir%/tilda
 
-src_tilda_CPPFLAGS = \
-	$(AM_CPPFLAGS) \
-    -I$(top_builddir)/src \
+%canon_reldir%_tilda_CPPFLAGS = \
+    $(AM_CPPFLAGS) \
     -DDATADIR='"$(datadir)"' \
-    -DMODULEDIR='"$(moduledir)"' \
-    -DLIBEXECDIR='"$(libexecdir)"'
+    -DLOCALEDIR='"$(localedir)"' \
+    -DPKGDATADIR='"$(pkgdatadir)"'
 
 # Keep the headers here so that make dist-bzip2 works
-src_tilda_SOURCES = src/callback_func.h src/callback_func.c \
+%canon_reldir%_tilda_SOURCES = src/callback_func.h src/callback_func.c \
 		src/configsys.h src/configsys.c \
 		src/debug.h \
 		src/eggaccelerators.h src/eggaccelerators.c \
@@ -26,20 +24,20 @@ src_tilda_SOURCES = src/callback_func.h src/callback_func.c \
 		src/wizard.h src/wizard.c \
 		src/xerror.h src/xerror.c
 
-src_tilda_CFLAGS = $(AM_CFLAGS) \
+%canon_reldir%_tilda_CFLAGS = $(AM_CFLAGS) \
 		$(GTK_CFLAGS) \
 		$(LIBGLADE_CFLAGS) \
 		$(VTE_CFLAGS) \
 		$(LIBCONFUSE_CFLAGS)
 
-src_tilda_LDFLAGS = $(AM_LDFLAGS) \
+%canon_reldir%_tilda_LDFLAGS = $(AM_LDFLAGS) \
 		$(GTK_LDFLAGS) \
 		$(LIBGLADE_LDFLAGS) \
 		$(VTE_LDFLAGS) \
 		$(LIBCONFUSE_LDFLAGS) \
 		-Wl,--as-needed
 
-src_tilda_LDADD = $(AM_LDADD) \
+%canon_reldir%_tilda_LDADD = $(AM_LDADD) \
 		$(GTK_LIBS) \
 		$(LIBGLADE_LIBS) \
 		$(VTE_LIBS) \

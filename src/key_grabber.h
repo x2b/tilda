@@ -17,7 +17,7 @@
 #ifndef TILDA_KEY_GRABBER_C
 #define TILDA_KEY_GRABBER_C
 
-#include <tilda_window.h>
+#include "tilda_window.h"
 
 G_BEGIN_DECLS
 

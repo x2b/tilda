@@ -18,15 +18,15 @@
 
 #include <tilda-config.h>
 
-#include <debug.h>
-#include <tilda.h>
-#include <callback_func.h>
-#include <configsys.h>
-#include <tilda_window.h>
-#include <key_grabber.h> /* for pull */
-#include <wizard.h>
-#include <xerror.h>
-#include <tomboykeybinder.h>
+#include "debug.h"
+#include "tilda.h"
+#include "callback_func.h"
+#include "configsys.h"
+#include "tilda_window.h"
+#include "key_grabber.h" /* for pull */
+#include "wizard.h"
+#include "xerror.h"
+#include "tomboykeybinder.h"
 
 #include <sys/ioctl.h>
 #include <sys/stat.h>
