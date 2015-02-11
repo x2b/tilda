@@ -36,6 +36,8 @@ struct tilda_term_
      * exit the program.
      */
     gboolean dropped_to_default_shell;
+    gint unscaled_font_size;
+    gdouble current_scale_factor;
 
     struct tilda_window_ *tw;
 };
@@ -75,11 +77,27 @@ gint tilda_term_free (struct tilda_term_ *term);
 void tilda_term_set_scrollbar_position (tilda_term *tt, enum tilda_term_scrollbar_positions pos);
 char* tilda_term_get_cwd(tilda_term* tt);
 
+//for access via hotkeys
+void normalize_font_size_cb(GtkWidget *widget, gpointer data);
+void increase_font_size_cb (GtkWidget *widget, gpointer data);
+void decrease_font_size_cb (GtkWidget *widget, gpointer data);
+
+
 #define TILDA_TERM(tt) ((tilda_term *)(tt))
 
 #define TERMINAL_PALETTE_SIZE 16
 
 extern GdkRGBA current_palette[TERMINAL_PALETTE_SIZE];
+
+/* Allow scales a bit smaller and a bit larger than the usual pango ranges */
+#define TERMINAL_SCALE_XXX_SMALL   (PANGO_SCALE_XX_SMALL/1.2)
+#define TERMINAL_SCALE_XXXX_SMALL  (TERMINAL_SCALE_XXX_SMALL/1.2)
+#define TERMINAL_SCALE_XXXXX_SMALL (TERMINAL_SCALE_XXXX_SMALL/1.2)
+#define TERMINAL_SCALE_XXX_LARGE   (PANGO_SCALE_XX_LARGE*1.2)
+#define TERMINAL_SCALE_XXXX_LARGE  (TERMINAL_SCALE_XXX_LARGE*1.2)
+#define TERMINAL_SCALE_XXXXX_LARGE (TERMINAL_SCALE_XXXX_LARGE*1.2)
+#define TERMINAL_SCALE_MINIMUM     (TERMINAL_SCALE_XXXXX_SMALL/1.2)
+#define TERMINAL_SCALE_MAXIMUM     (TERMINAL_SCALE_XXXXX_LARGE*1.2)
 
 G_END_DECLS
 

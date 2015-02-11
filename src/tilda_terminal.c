@@ -51,9 +51,6 @@ static void maximize_window_cb (GtkWidget *widget, gpointer data);
 static void restore_window_cb (GtkWidget *widget, gpointer data);
 static void refresh_window_cb (GtkWidget *widget, gpointer data);
 static void move_window_cb (GtkWidget *widget, guint x, guint y, gpointer data);
-static void increase_font_size_cb (GtkWidget *widget, gpointer data);
-static void decrease_font_size_cb (GtkWidget *widget, gpointer data);
-
 
 gint tilda_term_free (struct tilda_term_ *term)
 {
@@ -147,14 +144,7 @@ struct tilda_term_ *tilda_term_init (struct tilda_window_ *tw)
     g_signal_connect (G_OBJECT(term->vte_term), "move-window",
                       G_CALLBACK(move_window_cb), tw->window);
 
-    /* Connect to font tweakage. */
-    g_signal_connect (G_OBJECT(term->vte_term), "increase-font-size",
-                      G_CALLBACK(increase_font_size_cb), tw->window);
-    g_signal_connect (G_OBJECT(term->vte_term), "decrease-font-size",
-                      G_CALLBACK(decrease_font_size_cb), tw->window);
-
     /* Match URL's, etc */
-
     term->http_regexp=g_regex_new(HTTP_REGEXP, G_REGEX_CASELESS, G_REGEX_MATCH_NOTEMPTY, &error);
     ret = vte_terminal_match_add_gregex(VTE_TERMINAL(term->vte_term), term->http_regexp,0);
     vte_terminal_match_set_cursor_type (VTE_TERMINAL(term->vte_term), ret, GDK_HAND2);
@@ -178,6 +168,10 @@ struct tilda_term_ *tilda_term_init (struct tilda_window_ *tw)
 
     if (ret)
         goto err_fork;
+
+    PangoFontDescription* description = vte_terminal_get_font(term->vte_term);
+    term->unscaled_font_size = pango_font_description_get_size(description);
+    term->current_scale_factor = PANGO_SCALE_MEDIUM;
 
     return term;
 
@@ -326,54 +320,106 @@ static void move_window_cb (G_GNUC_UNUSED GtkWidget *widgets, guint x, guint y, 
             gdk_window_move (gtk_widget_get_window (GTK_WIDGET (data)), x, y);
 }
 
-static void adjust_font_size (GtkWidget *widget, gpointer data, gint howmuch)
-{
+/* Zoom helpers */
+static const double zoom_factors[] = {
+        TERMINAL_SCALE_MINIMUM,
+        TERMINAL_SCALE_XXXXX_SMALL,
+        TERMINAL_SCALE_XXXX_SMALL,
+        TERMINAL_SCALE_XXX_SMALL,
+        PANGO_SCALE_XX_SMALL,
+        PANGO_SCALE_X_SMALL,
+        PANGO_SCALE_SMALL,
+        PANGO_SCALE_MEDIUM,
+        PANGO_SCALE_LARGE,
+        PANGO_SCALE_X_LARGE,
+        PANGO_SCALE_XX_LARGE,
+        TERMINAL_SCALE_XXX_LARGE,
+        TERMINAL_SCALE_XXXX_LARGE,
+        TERMINAL_SCALE_XXXXX_LARGE,
+        TERMINAL_SCALE_MAXIMUM
+};
+
+static gboolean find_larger_zoom_factor (double  current, double *found) {
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (zoom_factors); ++i)
+    {
+        /* Find a font that's larger than this one */
+        if ((zoom_factors[i] - current) > 1e-6)
+        {
+            *found = zoom_factors[i];
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+static gboolean find_smaller_zoom_factor (double  current, double *found) {
+    int i;
+
+    i = (int) G_N_ELEMENTS (zoom_factors) - 1;
+    while (i >= 0)
+    {
+        /* Find a font that's smaller than this one */
+        if ((current - zoom_factors[i]) > 1e-6)
+        {
+            *found = zoom_factors[i];
+            return TRUE;
+        }
+
+        --i;
+    }
+
+    return FALSE;
+}
+
+static void adjust_font_size (GtkWidget *widget, gpointer data, gint value) {
     DEBUG_FUNCTION ("adjust_font_size");
     DEBUG_ASSERT (widget != NULL);
     DEBUG_ASSERT (data != NULL);
 
-    VteTerminal *terminal;
+    VteTerminal *terminal = VTE_TERMINAL(widget);
+    /* We need the tilda_term object to access the unscaled
+     * font size and current scale factor */
+    tilda_term *tt = (tilda_term*) data;
     PangoFontDescription *desired;
-    gint newsize;
-    gint columns, rows, owidth, oheight;
-
-    /* Read the screen dimensions in cells. */
-    terminal = VTE_TERMINAL(widget);
-    columns = vte_terminal_get_column_count (terminal);
-    rows = vte_terminal_get_row_count (terminal);
-
-    /* Take into account padding and border overhead. */
-    gtk_window_get_size(GTK_WINDOW(data), &owidth, &oheight);
-    owidth -= vte_terminal_get_char_width (terminal) * columns;
-    oheight -= vte_terminal_get_char_height (terminal) * rows;
 
     /* Calculate the new font size. */
     desired = pango_font_description_copy (vte_terminal_get_font(terminal));
-    newsize = pango_font_description_get_size (desired) / PANGO_SCALE;
-    newsize += howmuch;
-    pango_font_description_set_size (desired, CLAMP(newsize, 4, 144) * PANGO_SCALE);
 
-    /* Change the font, then resize the window so that we have the same
-     * number of rows and columns. */
+    if (value == 0) {
+        tt->current_scale_factor = PANGO_SCALE_MEDIUM;
+    } else if (value == 1) {
+        if (!find_larger_zoom_factor (tt->current_scale_factor, &tt->current_scale_factor))
+            return;
+    } else if (value == -1) {
+        if (!find_smaller_zoom_factor (tt->current_scale_factor, &tt->current_scale_factor))
+            return;
+    } else {
+        g_assert_not_reached ();
+    }
+
+    pango_font_description_set_size (desired, tt->unscaled_font_size * tt->current_scale_factor);
     vte_terminal_set_font (terminal, desired);
-    /*gtk_window_resize (GTK_WINDOW(data),
-              columns * terminal->char_width + owidth,
-              rows * terminal->char_height + oheight);*/
-
     pango_font_description_free (desired);
 }
 
-static void increase_font_size_cb (GtkWidget *widget, gpointer data)
-{
+void normalize_font_size_cb(GtkWidget *widget, gpointer data) {
+    DEBUG_FUNCTION ("normalize_font_size");
+            DEBUG_ASSERT (widget != NULL);
+            DEBUG_ASSERT (data != NULL);
+    adjust_font_size (widget, data, 0);
+}
+
+void increase_font_size_cb (GtkWidget *widget, gpointer data) {
     DEBUG_FUNCTION ("increase_font_size");
     DEBUG_ASSERT (widget != NULL);
     DEBUG_ASSERT (data != NULL);
-
     adjust_font_size (widget, data, 1);
 }
 
-static void decrease_font_size_cb (GtkWidget *widget, gpointer data)
-{
+void decrease_font_size_cb (GtkWidget *widget, gpointer data) {
     DEBUG_FUNCTION ("decrease_font_size");
     DEBUG_ASSERT (widget != NULL);
     DEBUG_ASSERT (data != NULL);
@@ -387,7 +433,7 @@ static void decrease_font_size_cb (GtkWidget *widget, gpointer data)
  *
  * SUCCESS: return non-NULL char* that should be freed with g_free when done
  * FAILURE: return NULL
-*/
+ */
 char* tilda_term_get_cwd(struct tilda_term_* tt)
 {
     char *file;
