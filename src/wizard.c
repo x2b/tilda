@@ -358,9 +358,6 @@ static void wizard_closed ()
     const gchar *gototab_10_key = GET_BUTTON_LABEL("button_keybinding_gototab10");
     const gchar *fullscreen_key = GET_BUTTON_LABEL("button_keybinding_fullscreen");
     const gchar *toggle_transparency_key = GET_BUTTON_LABEL("button_keybinding_toggle_transparency");
-    const gchar *increase_font_size_key = GET_BUTTON_LABEL("button_keybinding_increase_font_size");
-    const gchar *decrease_font_size_key = GET_BUTTON_LABEL("button_keybinding_decrease_font_size");
-    const gchar *normalize_font_size_key = GET_BUTTON_LABEL("button_keybinding_normalize_font_size");
     
     const GtkWidget *entry_custom_command =
         GTK_WIDGET (gtk_builder_get_object(xml, "entry_custom_command"));
@@ -417,12 +414,6 @@ static void wizard_closed ()
         return;
     if (!validate_keybinding(toggle_transparency_key, wizard_window, _("The keybinding you chose for \"Toggle Transparency\" is invalid. Please choose another.")))
         return;
-    if (!validate_keybinding(increase_font_size_key, wizard_window, _("The keybinding you chose for \"Increase Font Size\" is invalid. Please choose another.")))
-        return;
-    if (!validate_keybinding(decrease_font_size_key, wizard_window, _("The keybinding you chose for \"Decrease Font Size\" is invalid. Please choose another.")))
-        return;
-    if (!validate_keybinding(normalize_font_size_key, wizard_window, _("The keybinding you chose for \"Normalize Font Size\" is invalid. Please choose another.")))
-        return;
 
     /* Now that our shortcuts are validated, store them back into the config. */
     config_setstr ("key", key);
@@ -447,9 +438,6 @@ static void wizard_closed ()
     config_setstr ("gototab_10_key", gototab_10_key);
     config_setstr ("fullscreen_key", fullscreen_key);
     config_setstr ("toggle_transparency_key", toggle_transparency_key);
-    config_setstr ("increase_font_size_key", increase_font_size_key);
-    config_setstr ("decrease_font_size_key", decrease_font_size_key);
-    config_setstr ("normalize_font_size_key", normalize_font_size_key);
 
     /* Now that they're in the config, reset the keybindings right now. */
     tilda_window_setup_keyboard_accelerators(tw);
@@ -1854,9 +1842,6 @@ static void button_keybinding_clicked_cb (GtkWidget *w)
     const GtkWidget *button_keybinding_gototab10 =    GTK_WIDGET (gtk_builder_get_object (xml, "button_keybinding_gototab10"));
     const GtkWidget *button_keybinding_fullscreen =   GTK_WIDGET (gtk_builder_get_object (xml, "button_keybinding_fullscreen"));
     const GtkWidget *button_keybinding_toggle_transparency = GTK_WIDGET (gtk_builder_get_object (xml, "button_keybinding_toggle_transparency"));
-    const GtkWidget *button_keybinding_increase_font_size = GTK_WIDGET (gtk_builder_get_object (xml, "button_keybinding_increase_font_size"));
-    const GtkWidget *button_keybinding_decrease_font_size = GTK_WIDGET (gtk_builder_get_object (xml, "button_keybinding_decrease_font_size"));
-    const GtkWidget *button_keybinding_normalize_font_size = GTK_WIDGET (gtk_builder_get_object (xml, "button_keybinding_normalize_font_size"));
 
     /* Make the preferences window and buttons non-sensitive while we are grabbing keys. */
     gtk_widget_set_sensitive (GTK_WIDGET(wizard_notebook), FALSE);
@@ -1883,9 +1868,6 @@ static void button_keybinding_clicked_cb (GtkWidget *w)
     gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_gototab10), FALSE);
     gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_fullscreen), FALSE);
     gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_toggle_transparency), FALSE);
-    gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_increase_font_size), FALSE);
-    gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_decrease_font_size), FALSE);
-    gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_normalize_font_size), FALSE);
     
     /* Bring up the dialog that will accept the new keybinding */
     GtkWidget *dialog = gtk_message_dialog_new (GTK_WINDOW(wizard_window),
@@ -1927,9 +1909,6 @@ static void button_keybinding_clicked_cb (GtkWidget *w)
     gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_gototab10), TRUE);
     gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_fullscreen), TRUE);
     gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_toggle_transparency), TRUE);
-    gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_increase_font_size), TRUE);
-    gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_decrease_font_size), TRUE);
-    gtk_widget_set_sensitive (GTK_WIDGET(button_keybinding_normalize_font_size), TRUE);
     
     /* If the dialog was "programmatically destroyed" (we got a key), we don't want to destroy it again.
        Otherwise, we do want to destroy it, otherwise it would stick around even after hitting Cancel. */
@@ -2139,9 +2118,6 @@ static void set_wizard_state_from_config () {
     BUTTON_LABEL_FROM_CFG ("button_keybinding_gototab10", "gototab_10_key");
     BUTTON_LABEL_FROM_CFG ("button_keybinding_fullscreen", "fullscreen_key");
     BUTTON_LABEL_FROM_CFG ("button_keybinding_toggle_transparency", "toggle_transparency_key");
-    BUTTON_LABEL_FROM_CFG ("button_keybinding_increase_font_size", "increase_font_size_key"); 
-    BUTTON_LABEL_FROM_CFG ("button_keybinding_decrease_font_size", "decrease_font_size_key");
-    BUTTON_LABEL_FROM_CFG ("button_keybinding_normalize_font_size", "normalize_font_size_key");
 }
 
 #define CONNECT_SIGNAL(GLADE_WIDGET,SIGNAL_NAME,SIGNAL_HANDLER) g_signal_connect ( \
@@ -2257,9 +2233,6 @@ static void connect_wizard_signals ()
     CONNECT_SIGNAL ("button_keybinding_gototab10","clicked",button_keybinding_clicked_cb);
     CONNECT_SIGNAL ("button_keybinding_fullscreen", "clicked", button_keybinding_clicked_cb);
     CONNECT_SIGNAL ("button_keybinding_toggle_transparency", "clicked", button_keybinding_clicked_cb);
-    CONNECT_SIGNAL ("button_keybinding_increase_font_size", "clicked", button_keybinding_clicked_cb);
-    CONNECT_SIGNAL ("button_keybinding_decrease_font_size", "clicked", button_keybinding_clicked_cb);
-    CONNECT_SIGNAL ("button_keybinding_normalize_font_size", "clicked", button_keybinding_clicked_cb);
     
     /* Close Button */
     CONNECT_SIGNAL ("button_wizard_close","clicked",button_wizard_close_clicked_cb);
