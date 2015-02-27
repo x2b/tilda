@@ -169,9 +169,9 @@ struct tilda_term_ *tilda_term_init (struct tilda_window_ *tw)
     if (ret)
         goto err_fork;
 
-    PangoFontDescription* description = vte_terminal_get_font(term->vte_term);
+    const PangoFontDescription* description = vte_terminal_get_font(term->vte_term);
     term->unscaled_font_size = pango_font_description_get_size(description);
-    term->current_scale_factor = PANGO_SCALE_MEDIUM;
+    tilda_term_adjust_font_scale(term, tw->current_scale_factor);
 
     return term;
 
@@ -320,111 +320,19 @@ static void move_window_cb (G_GNUC_UNUSED GtkWidget *widgets, guint x, guint y, 
             gdk_window_move (gtk_widget_get_window (GTK_WIDGET (data)), x, y);
 }
 
-/* Zoom helpers */
-static const double zoom_factors[] = {
-        TERMINAL_SCALE_MINIMUM,
-        TERMINAL_SCALE_XXXXX_SMALL,
-        TERMINAL_SCALE_XXXX_SMALL,
-        TERMINAL_SCALE_XXX_SMALL,
-        PANGO_SCALE_XX_SMALL,
-        PANGO_SCALE_X_SMALL,
-        PANGO_SCALE_SMALL,
-        PANGO_SCALE_MEDIUM,
-        PANGO_SCALE_LARGE,
-        PANGO_SCALE_X_LARGE,
-        PANGO_SCALE_XX_LARGE,
-        TERMINAL_SCALE_XXX_LARGE,
-        TERMINAL_SCALE_XXXX_LARGE,
-        TERMINAL_SCALE_XXXXX_LARGE,
-        TERMINAL_SCALE_MAXIMUM
-};
+void tilda_term_adjust_font_scale(tilda_term *term, gdouble scale) {
+    DEBUG_FUNCTION ("tilda_term_adjust_font_scale");
 
-static gboolean find_larger_zoom_factor (double  current, double *found) {
-    guint i;
-
-    for (i = 0; i < G_N_ELEMENTS (zoom_factors); ++i)
-    {
-        /* Find a font that's larger than this one */
-        if ((zoom_factors[i] - current) > 1e-6)
-        {
-            *found = zoom_factors[i];
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-static gboolean find_smaller_zoom_factor (double  current, double *found) {
-    int i;
-
-    i = (int) G_N_ELEMENTS (zoom_factors) - 1;
-    while (i >= 0)
-    {
-        /* Find a font that's smaller than this one */
-        if ((current - zoom_factors[i]) > 1e-6)
-        {
-            *found = zoom_factors[i];
-            return TRUE;
-        }
-
-        --i;
-    }
-
-    return FALSE;
-}
-
-static void adjust_font_size (GtkWidget *widget, gpointer data, gint value) {
-    DEBUG_FUNCTION ("adjust_font_size");
-    DEBUG_ASSERT (widget != NULL);
-    DEBUG_ASSERT (data != NULL);
-
-    VteTerminal *terminal = VTE_TERMINAL(widget);
+    VteTerminal *terminal = term->vte_term;
     /* We need the tilda_term object to access the unscaled
      * font size and current scale factor */
-    tilda_term *tt = (tilda_term*) data;
     PangoFontDescription *desired;
 
-    /* Calculate the new font size. */
     desired = pango_font_description_copy (vte_terminal_get_font(terminal));
-
-    if (value == 0) {
-        tt->current_scale_factor = PANGO_SCALE_MEDIUM;
-    } else if (value == 1) {
-        if (!find_larger_zoom_factor (tt->current_scale_factor, &tt->current_scale_factor))
-            return;
-    } else if (value == -1) {
-        if (!find_smaller_zoom_factor (tt->current_scale_factor, &tt->current_scale_factor))
-            return;
-    } else {
-        g_assert_not_reached ();
-    }
-
-    pango_font_description_set_size (desired, tt->unscaled_font_size * tt->current_scale_factor);
+    term->current_scale_factor = scale;
+    pango_font_description_set_size (desired, term->unscaled_font_size * scale);
     vte_terminal_set_font (terminal, desired);
     pango_font_description_free (desired);
-}
-
-void normalize_font_size_cb(GtkWidget *widget, gpointer data) {
-    DEBUG_FUNCTION ("normalize_font_size");
-            DEBUG_ASSERT (widget != NULL);
-            DEBUG_ASSERT (data != NULL);
-    adjust_font_size (widget, data, 0);
-}
-
-void increase_font_size_cb (GtkWidget *widget, gpointer data) {
-    DEBUG_FUNCTION ("increase_font_size");
-    DEBUG_ASSERT (widget != NULL);
-    DEBUG_ASSERT (data != NULL);
-    adjust_font_size (widget, data, 1);
-}
-
-void decrease_font_size_cb (GtkWidget *widget, gpointer data) {
-    DEBUG_FUNCTION ("decrease_font_size");
-    DEBUG_ASSERT (widget != NULL);
-    DEBUG_ASSERT (data != NULL);
-
-    adjust_font_size (widget, data, -1);
 }
 
 /* Returns the working directory of the terminal

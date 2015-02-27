@@ -169,14 +169,70 @@ gint toggle_transparency (tilda_window *tw)
     return GDK_EVENT_STOP;
 }
 
+/* Zoom helpers */
+static const double zoom_factors[] = {
+        TERMINAL_SCALE_MINIMUM,
+        TERMINAL_SCALE_XXXXX_SMALL,
+        TERMINAL_SCALE_XXXX_SMALL,
+        TERMINAL_SCALE_XXX_SMALL,
+        PANGO_SCALE_XX_SMALL,
+        PANGO_SCALE_X_SMALL,
+        PANGO_SCALE_SMALL,
+        PANGO_SCALE_MEDIUM,
+        PANGO_SCALE_LARGE,
+        PANGO_SCALE_X_LARGE,
+        PANGO_SCALE_XX_LARGE,
+        TERMINAL_SCALE_XXX_LARGE,
+        TERMINAL_SCALE_XXXX_LARGE,
+        TERMINAL_SCALE_XXXXX_LARGE,
+        TERMINAL_SCALE_MAXIMUM
+};
+
+static gboolean find_larger_zoom_factor (double  current, double *found) {
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (zoom_factors); ++i)
+    {
+        /* Find a font that's larger than this one */
+        if ((zoom_factors[i] - current) > 1e-6)
+        {
+            *found = zoom_factors[i];
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+static gboolean find_smaller_zoom_factor (double  current, double *found) {
+    int i;
+
+    i = (int) G_N_ELEMENTS (zoom_factors) - 1;
+    while (i >= 0)
+    {
+        /* Find a font that's smaller than this one */
+        if ((current - zoom_factors[i]) > 1e-6)
+        {
+            *found = zoom_factors[i];
+            return TRUE;
+        }
+
+        --i;
+    }
+
+    return FALSE;
+}
+
 /* Increase and Decrease and reset affects all tabs at once */
 gboolean normalize_font_size(tilda_window *tw)
 {
     tilda_term *tt;
     int i;
+    tw->current_scale_factor = PANGO_SCALE_MEDIUM;
+
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
-        normalize_font_size_cb (tt->vte_term, tt);
+        tilda_term_adjust_font_scale(tt, tw->current_scale_factor);
     }
     return GDK_EVENT_STOP;
 }
@@ -185,20 +241,29 @@ gboolean increase_font_size (tilda_window *tw)
 {
     tilda_term *tt;
     int i;
+    if(!find_larger_zoom_factor (tw->current_scale_factor, &tw->current_scale_factor)) {
+        return GDK_EVENT_STOP;
+    }
+
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
-        increase_font_size_cb(tt->vte_term, tt);
+        tilda_term_adjust_font_scale(tt, tw->current_scale_factor);
     }
     return GDK_EVENT_STOP;
 }
+
 gboolean decrease_font_size (tilda_window *tw)
 {
     tilda_term *tt;
     int i;
+    if(!find_smaller_zoom_factor (tw->current_scale_factor, &tw->current_scale_factor)) {
+        return GDK_EVENT_STOP;
+    }
+
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
-        decrease_font_size_cb(tt->vte_term, tt);
-    } 
+        tilda_term_adjust_font_scale(tt, tw->current_scale_factor);
+    }
     return GDK_EVENT_STOP;
 }
 
@@ -620,6 +685,7 @@ gboolean tilda_window_init (const gchar *config_file, const gint instance, tilda
     tw->auto_hide_on_focus_lost = config_getbool("auto_hide_on_focus_lost");
     tw->disable_auto_hide = FALSE;
     tw->focus_loss_on_keypress = FALSE;
+    tw->current_scale_factor = PANGO_SCALE_MEDIUM;
 
     if(1 == config_getint("non_focus_pull_up_behaviour")) {
         tw->hide_non_focused = TRUE;
