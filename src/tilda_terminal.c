@@ -104,6 +104,9 @@ struct tilda_term_ *tilda_term_init (struct tilda_window_ *tw)
     /* Set properties of the terminal */
     tilda_term_config_defaults (term);
 
+    /* Update the font scale because the newly created terminal uses the default font size */
+    tilda_term_adjust_font_scale(term, tw->current_scale_factor);
+
     /* Pack everything into the hbox */
     gtk_box_pack_end (GTK_BOX(term->hbox), term->scrollbar, FALSE, FALSE, 0);
     gtk_box_pack_end (GTK_BOX(term->hbox), term->vte_term, TRUE, TRUE, 0);
@@ -168,10 +171,6 @@ struct tilda_term_ *tilda_term_init (struct tilda_window_ *tw)
 
     if (ret)
         goto err_fork;
-
-    const PangoFontDescription* description = vte_terminal_get_font(term->vte_term);
-    term->unscaled_font_size = pango_font_description_get_size(description);
-    tilda_term_adjust_font_scale(term, tw->current_scale_factor);
 
     return term;
 
@@ -329,8 +328,7 @@ void tilda_term_adjust_font_scale(tilda_term *term, gdouble scale) {
     PangoFontDescription *desired;
 
     desired = pango_font_description_copy (vte_terminal_get_font(terminal));
-    term->current_scale_factor = scale;
-    pango_font_description_set_size (desired, term->unscaled_font_size * scale);
+    pango_font_description_set_size (desired, term->tw->unscaled_font_size * scale);
     vte_terminal_set_font (terminal, desired);
     pango_font_description_free (desired);
 }

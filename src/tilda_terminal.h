@@ -36,8 +36,6 @@ struct tilda_term_
      * exit the program.
      */
     gboolean dropped_to_default_shell;
-    gint unscaled_font_size;
-    gdouble current_scale_factor;
 
     struct tilda_window_ *tw;
 };

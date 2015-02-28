@@ -63,6 +63,7 @@ struct tilda_window_
     enum tilda_positions { UP, DOWN } current_state;
     gboolean focus_loss_on_keypress;
 
+    gint unscaled_font_size;
     gdouble current_scale_factor;
 };
 

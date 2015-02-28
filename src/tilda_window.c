@@ -685,6 +685,10 @@ gboolean tilda_window_init (const gchar *config_file, const gint instance, tilda
     tw->auto_hide_on_focus_lost = config_getbool("auto_hide_on_focus_lost");
     tw->disable_auto_hide = FALSE;
     tw->focus_loss_on_keypress = FALSE;
+
+    PangoFontDescription *description = pango_font_description_from_string(config_getstr("font"));
+    gint size = pango_font_description_get_size(description);
+    tw->unscaled_font_size = size;
     tw->current_scale_factor = PANGO_SCALE_MEDIUM;
 
     if(1 == config_getint("non_focus_pull_up_behaviour")) {
