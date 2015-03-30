@@ -854,7 +854,7 @@ static void check_terminal_bell_toggled_cb (GtkWidget *w)
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
         vte_terminal_set_audible_bell (VTE_TERMINAL(tt->vte_term), status);
-        vte_terminal_set_visible_bell (VTE_TERMINAL(tt->vte_term), !status);
+        //vte_terminal_set_visible_bell (VTE_TERMINAL(tt->vte_term), !status);
     }
 }
 
@@ -1143,7 +1143,7 @@ static void entry_word_chars_changed (GtkWidget *w)
 
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
-        vte_terminal_set_word_chars (VTE_TERMINAL(tt->vte_term), word_chars);
+        //vte_terminal_set_word_chars (VTE_TERMINAL(tt->vte_term), word_chars);
     }
 }
 
@@ -1378,6 +1378,7 @@ static void check_enable_transparency_toggled_cb (GtkWidget *w)
     gtk_widget_set_sensitive (GTK_WIDGET(label_level_of_transparency), status);
     gtk_widget_set_sensitive (GTK_WIDGET(spin_level_of_transparency), status);
 
+    /*
     if (status)
     {
         for (i=0; i<g_list_length (tw->terms); i++) {
@@ -1396,6 +1397,7 @@ static void check_enable_transparency_toggled_cb (GtkWidget *w)
             vte_terminal_set_opacity (VTE_TERMINAL(tt->vte_term), 0xffff);
         }
     }
+    */
 }
 
 static void spin_level_of_transparency_value_changed_cb (GtkWidget *w)
@@ -1407,12 +1409,14 @@ static void spin_level_of_transparency_value_changed_cb (GtkWidget *w)
 
     config_setint ("transparency", status);
 
+    /*
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
         vte_terminal_set_background_saturation (VTE_TERMINAL(tt->vte_term), transparency_level);
         vte_terminal_set_opacity (VTE_TERMINAL(tt->vte_term), (1.0 - transparency_level) * 0xffff);
         vte_terminal_set_background_transparent(VTE_TERMINAL(tt->vte_term), !tw->have_argb_visual);
     }
+    */
 }
 
 static void spin_animation_delay_value_changed_cb (GtkWidget *w)
@@ -1484,6 +1488,7 @@ static void check_use_image_for_background_toggled_cb (GtkWidget *w)
 
     gtk_widget_set_sensitive (GTK_WIDGET(button_background_image), status);
 
+    /*
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
 
@@ -1492,6 +1497,7 @@ static void check_use_image_for_background_toggled_cb (GtkWidget *w)
         else
             vte_terminal_set_background_image_file (VTE_TERMINAL(tt->vte_term), NULL);
     }
+    */
 }
 
 static void button_background_image_selection_changed_cb (GtkWidget *w)
@@ -1502,6 +1508,7 @@ static void button_background_image_selection_changed_cb (GtkWidget *w)
 
     config_setstr ("image", image);
 
+    /*
     if (config_getbool ("use_image"))
     {
         for (i=0; i<g_list_length (tw->terms); i++) {
@@ -1509,6 +1516,7 @@ static void button_background_image_selection_changed_cb (GtkWidget *w)
             vte_terminal_set_background_image_file (VTE_TERMINAL(tt->vte_term), image);
         }
     }
+    */
 }
 
 static void combo_colorschemes_changed_cb (GtkWidget *w)
@@ -1591,8 +1599,8 @@ static void combo_colorschemes_changed_cb (GtkWidget *w)
 
         for (i=0; i<g_list_length (tw->terms); i++) {
             tt = g_list_nth_data (tw->terms, i);
-            vte_terminal_set_color_foreground_rgba (VTE_TERMINAL(tt->vte_term), &gdk_text);
-            vte_terminal_set_color_background_rgba (VTE_TERMINAL(tt->vte_term), &gdk_back);
+            vte_terminal_set_color_foreground (VTE_TERMINAL(tt->vte_term), &gdk_text);
+            vte_terminal_set_color_background (VTE_TERMINAL(tt->vte_term), &gdk_back);
         }
     }
 }
@@ -1618,7 +1626,7 @@ static void colorbutton_text_color_set_cb (GtkWidget *w)
 
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
-        vte_terminal_set_color_foreground_rgba (VTE_TERMINAL(tt->vte_term), &gdk_text_color);
+        vte_terminal_set_color_foreground (VTE_TERMINAL(tt->vte_term), &gdk_text_color);
     }
 }
 
@@ -1642,7 +1650,7 @@ static void colorbutton_back_color_set_cb (GtkWidget *w)
 
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
-        vte_terminal_set_color_background_rgba (VTE_TERMINAL(tt->vte_term), &gdk_back_color);
+        vte_terminal_set_color_background (VTE_TERMINAL(tt->vte_term), &gdk_back_color);
     }
 }
 
@@ -1672,11 +1680,11 @@ static void combo_palette_scheme_changed_cb (GtkWidget *w) {
         /* Set terminal palette. */
         for (j=0; j<g_list_length (tw->terms); j++) {
             tt = g_list_nth_data (tw->terms, j);
-            vte_terminal_set_colors_rgba (VTE_TERMINAL(tt->vte_term),
-                                          &fg,
-                                          &bg,
-                                          current_palette,
-                                          TERMINAL_PALETTE_SIZE);
+            vte_terminal_set_colors (VTE_TERMINAL(tt->vte_term),
+                                     &fg,
+                                     &bg,
+                                     current_palette,
+                                     TERMINAL_PALETTE_SIZE);
         }
 
         for (j=0; j<TERMINAL_PALETTE_SIZE; j++) {
@@ -1749,11 +1757,11 @@ static void colorbutton_palette_n_set_cb (GtkWidget *w)
     for (i=0; i<g_list_length (tw->terms); i++)
     {
         tt = g_list_nth_data (tw->terms, i);
-        vte_terminal_set_colors_rgba (VTE_TERMINAL (tt->vte_term),
-                                      &fg,
-                                      &bg,
-                                      current_palette,
-                                      TERMINAL_PALETTE_SIZE);
+        vte_terminal_set_colors (VTE_TERMINAL (tt->vte_term),
+                                 &fg,
+                                 &bg,
+                                 current_palette,
+                                 TERMINAL_PALETTE_SIZE);
     }
 }
 
@@ -1852,7 +1860,7 @@ static void check_scroll_background_toggled_cb (GtkWidget *w)
 
     for (i=0; i<g_list_length (tw->terms); i++) {
         tt = g_list_nth_data (tw->terms, i);
-        vte_terminal_set_scroll_background (VTE_TERMINAL(tt->vte_term), status);
+        //vte_terminal_set_scroll_background (VTE_TERMINAL(tt->vte_term), status);
     }
 }
 

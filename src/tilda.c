@@ -735,4 +735,3 @@ initialization_failed:
 
     return 0;
 }
-
