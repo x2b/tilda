@@ -1361,64 +1361,6 @@ static void spin_y_position_value_changed_cb (GtkWidget *w)
     generate_animation_positions (tw);
 }
 
-static void check_enable_transparency_toggled_cb (GtkWidget *w)
-{
-    const gboolean status = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON(w));
-    const GtkWidget *label_level_of_transparency =
-        GTK_WIDGET (gtk_builder_get_object (xml, "label_level_of_transparency"));
-    const GtkWidget *spin_level_of_transparency =
-        GTK_WIDGET (gtk_builder_get_object (xml, "spin_level_of_transparency"));
-
-    const gdouble transparency_level = (gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON(spin_level_of_transparency)) / 100.0);
-    guint i;
-    tilda_term *tt;
-
-    config_setbool ("enable_transparency", status);
-
-    gtk_widget_set_sensitive (GTK_WIDGET(label_level_of_transparency), status);
-    gtk_widget_set_sensitive (GTK_WIDGET(spin_level_of_transparency), status);
-
-    /*
-    if (status)
-    {
-        for (i=0; i<g_list_length (tw->terms); i++) {
-            tt = g_list_nth_data (tw->terms, i);
-            vte_terminal_set_background_saturation (VTE_TERMINAL(tt->vte_term), transparency_level);
-            vte_terminal_set_background_transparent(VTE_TERMINAL(tt->vte_term), !tw->have_argb_visual);
-            vte_terminal_set_opacity (VTE_TERMINAL(tt->vte_term), (1.0 - transparency_level) * 0xffff);
-        }
-    }
-    else
-    {
-        for (i=0; i<g_list_length (tw->terms); i++) {
-            tt = g_list_nth_data (tw->terms, i);
-            vte_terminal_set_background_saturation (VTE_TERMINAL(tt->vte_term), 0);
-            vte_terminal_set_background_transparent(VTE_TERMINAL(tt->vte_term), FALSE);
-            vte_terminal_set_opacity (VTE_TERMINAL(tt->vte_term), 0xffff);
-        }
-    }
-    */
-}
-
-static void spin_level_of_transparency_value_changed_cb (GtkWidget *w)
-{
-    const gint status = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON(w));
-    const gdouble transparency_level = (status / 100.0);
-    guint i;
-    tilda_term *tt;
-
-    config_setint ("transparency", status);
-
-    /*
-    for (i=0; i<g_list_length (tw->terms); i++) {
-        tt = g_list_nth_data (tw->terms, i);
-        vte_terminal_set_background_saturation (VTE_TERMINAL(tt->vte_term), transparency_level);
-        vte_terminal_set_opacity (VTE_TERMINAL(tt->vte_term), (1.0 - transparency_level) * 0xffff);
-        vte_terminal_set_background_transparent(VTE_TERMINAL(tt->vte_term), !tw->have_argb_visual);
-    }
-    */
-}
-
 static void spin_animation_delay_value_changed_cb (GtkWidget *w)
 {
     const gint status = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON(w));
@@ -1471,52 +1413,6 @@ static void check_animated_pulldown_toggled_cb (GtkWidget *w)
          * exactly as expected, so I'm leaving it that way. */
         gtk_window_resize (GTK_WINDOW(tw->window), 1, 1);
     }
-}
-
-static void check_use_image_for_background_toggled_cb (GtkWidget *w)
-{
-    const gboolean status = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON(w));
-    const GtkWidget *button_background_image =
-        GTK_WIDGET (gtk_builder_get_object (xml, "button_background_image"));
-
-    const gchar *image = config_getstr ("image");
-    guint i;
-    tilda_term *tt;
-
-
-    config_setbool ("use_image", status);
-
-    gtk_widget_set_sensitive (GTK_WIDGET(button_background_image), status);
-
-    /*
-    for (i=0; i<g_list_length (tw->terms); i++) {
-        tt = g_list_nth_data (tw->terms, i);
-
-        if (status)
-            vte_terminal_set_background_image_file (VTE_TERMINAL(tt->vte_term), image);
-        else
-            vte_terminal_set_background_image_file (VTE_TERMINAL(tt->vte_term), NULL);
-    }
-    */
-}
-
-static void button_background_image_selection_changed_cb (GtkWidget *w)
-{
-    const gchar *image = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER(w));
-    guint i;
-    tilda_term *tt;
-
-    config_setstr ("image", image);
-
-    /*
-    if (config_getbool ("use_image"))
-    {
-        for (i=0; i<g_list_length (tw->terms); i++) {
-            tt = g_list_nth_data (tw->terms, i);
-            vte_terminal_set_background_image_file (VTE_TERMINAL(tt->vte_term), image);
-        }
-    }
-    */
 }
 
 static void combo_colorschemes_changed_cb (GtkWidget *w)
@@ -2165,24 +2061,14 @@ static void set_wizard_state_from_config () {
 
 	initialize_geometry_spinners();
 
-    CHECK_BUTTON ("check_enable_transparency", "enable_transparency");
-    SPIN_BUTTON ("spin_level_of_transparency", "transparency");
     CHECK_BUTTON ("check_animated_pulldown", "animation");
     SPIN_BUTTON ("spin_animation_delay", "slide_sleep_usec");
     COMBO_BOX ("combo_animation_orientation", "animation_orientation");
-    CHECK_BUTTON ("check_use_image_for_background", "use_image");
 
-    char* filename = config_getstr ("image");
-    if(filename != NULL) {
-        FILE_BUTTON ("button_background_image", filename);
-    }
-    SET_SENSITIVE_BY_CONFIG_BOOL ("label_level_of_transparency","enable_transparency");
-    SET_SENSITIVE_BY_CONFIG_BOOL ("spin_level_of_transparency","enable_transparency");
     SET_SENSITIVE_BY_CONFIG_BOOL ("label_animation_delay","animation");
     SET_SENSITIVE_BY_CONFIG_BOOL ("spin_animation_delay","animation");
     SET_SENSITIVE_BY_CONFIG_BOOL ("label_animation_orientation","animation");
     SET_SENSITIVE_BY_CONFIG_BOOL ("combo_animation_orientation","animation");
-    SET_SENSITIVE_BY_CONFIG_BOOL ("button_background_image","use_image");
 
     /* Colors Tab */
     COMBO_BOX ("combo_colorschemes", "scheme");
@@ -2305,13 +2191,9 @@ static void connect_wizard_signals ()
     CONNECT_SIGNAL ("spin_x_position","value-changed",spin_x_position_value_changed_cb);
     CONNECT_SIGNAL ("spin_y_position","value-changed",spin_y_position_value_changed_cb);
 
-    CONNECT_SIGNAL ("check_enable_transparency","toggled",check_enable_transparency_toggled_cb);
     CONNECT_SIGNAL ("check_animated_pulldown","toggled",check_animated_pulldown_toggled_cb);
-    CONNECT_SIGNAL ("check_use_image_for_background","toggled",check_use_image_for_background_toggled_cb);
-    CONNECT_SIGNAL ("spin_level_of_transparency","value-changed",spin_level_of_transparency_value_changed_cb);
     CONNECT_SIGNAL ("spin_animation_delay","value-changed",spin_animation_delay_value_changed_cb);
     CONNECT_SIGNAL ("combo_animation_orientation","changed",combo_animation_orientation_changed_cb);
-    CONNECT_SIGNAL ("button_background_image","selection-changed",button_background_image_selection_changed_cb);
 
     /* Colors Tab */
     CONNECT_SIGNAL ("combo_colorschemes","changed",combo_colorschemes_changed_cb);
