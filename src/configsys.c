@@ -67,7 +67,6 @@ static cfg_opt_t config_opts[] = {
     CFG_STR("background_color", "white", CFGF_NONE),
     CFG_STR("working_dir", NULL, CFGF_NONE),
     CFG_STR("web_browser", "x-www-browser", CFGF_NONE),
-    CFG_STR("word_chars", DEFAULT_WORD_CHARS, CFGF_NONE),
     CFG_STR("increase_font_size_key", "<Control>equal", CFGF_NONE),
     CFG_STR("decrease_font_size_key", "<Control>minus", CFGF_NONE),
     CFG_STR("normalize_font_size_key", "<Control>0", CFGF_NONE),

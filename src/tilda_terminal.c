@@ -547,7 +547,6 @@ static gint tilda_term_config_defaults (tilda_term *tt)
 
     gdouble transparency_level = 0.0;
     GdkRGBA fg, bg;
-    gchar* word_chars;
     gint i;
 
     /** Colors & Palette **/
@@ -630,32 +629,6 @@ static gint tilda_term_config_defaults (tilda_term *tt)
             vte_terminal_set_delete_binding (VTE_TERMINAL(tt->vte_term), VTE_ERASE_AUTO);
             break;
     }
-
-    /** Word chars **/
-    word_chars =  config_getstr ("word_chars");
-    if (NULL == word_chars || '\0' == *word_chars) {
-        word_chars = DEFAULT_WORD_CHARS;
-    }
-    //vte_terminal_set_word_chars (VTE_TERMINAL(tt->vte_term), word_chars);
-
-    /** Background **/
-    /*
-    if (config_getbool ("use_image"))
-        vte_terminal_set_background_image_file (VTE_TERMINAL(tt->vte_term), config_getstr ("image"));
-    else
-        vte_terminal_set_background_image_file (VTE_TERMINAL(tt->vte_term), NULL);
-    */
-
-    /*
-    transparency_level = ((gdouble) config_getint ("transparency"))/100;
-
-    if (config_getbool ("enable_transparency") && transparency_level > 0)
-    {
-        vte_terminal_set_background_saturation (VTE_TERMINAL (tt->vte_term), transparency_level);
-        vte_terminal_set_opacity (VTE_TERMINAL (tt->vte_term), (1.0 - transparency_level) * 0xffff);
-        vte_terminal_set_background_transparent (VTE_TERMINAL(tt->vte_term), !tt->tw->have_argb_visual);
-    }
-    */
 
     return 0;
 }

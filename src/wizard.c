@@ -1129,24 +1129,6 @@ static void entry_web_browser_changed (GtkWidget *w) {
     config_setstr ("web_browser", web_browser);
 }
 
-static void entry_word_chars_changed (GtkWidget *w)
-{
-    guint i;
-    tilda_term *tt;
-    const gchar *word_chars = gtk_entry_get_text (GTK_ENTRY(w));
-
-    /* restore to default value if user clears this setting */
-    if (NULL == word_chars || '\0' == word_chars[0])
-        word_chars = DEFAULT_WORD_CHARS;
-
-    config_setstr ("word_chars", word_chars);
-
-    for (i=0; i<g_list_length (tw->terms); i++) {
-        tt = g_list_nth_data (tw->terms, i);
-        //vte_terminal_set_word_chars (VTE_TERMINAL(tt->vte_term), word_chars);
-    }
-}
-
 /*
  * Finds the coordinate that will center the tilda window in the screen.
  *
@@ -2052,7 +2034,6 @@ static void set_wizard_state_from_config () {
     SET_SENSITIVE_BY_CONFIG_BOOL ("label_custom_command", "run_command");
 
     TEXT_ENTRY ("entry_web_browser", "web_browser");
-    TEXT_ENTRY ("entry_word_chars", "word_chars");
 
     /* Appearance Tab */
     /* Initialize the monitor chooser combo box with the numbers of the monitor */
@@ -2177,7 +2158,6 @@ static void connect_wizard_signals ()
 
     CONNECT_SIGNAL ("entry_web_browser","changed",entry_web_browser_changed);
     CONNECT_SIGNAL ("entry_web_browser","focus-out-event", validate_executable_command_cb);
-    CONNECT_SIGNAL ("entry_word_chars","changed",entry_word_chars_changed);
 
     /* Appearance Tab */
     CONNECT_SIGNAL ("combo_choose_monitor", "changed", combo_monitor_selection_changed_cb);
